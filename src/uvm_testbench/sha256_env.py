@@ -7,8 +7,9 @@ class SHA256Env(uvm_component):
         super().__init__(name, parent)
     
     def build_phase(self):
-        self.agent = SHA256Agent("agent",self)
+        self.agent = SHA256Agent("agent", self)
         self.scoreboard = SHA256Scoreboard("scoreboard", self)
     
     def connect_phase(self):
+        # Connect the analysis port to the scoreboard's analysis export
         self.agent.monitor.analysis_port.connect(self.scoreboard.analysis_export)
