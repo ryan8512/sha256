@@ -1,82 +1,69 @@
 # Makefile for SHA256 UVM Testbench
-# Run from uvm_testbench directory
 
-# Simulator selection
+# Simulator
 SIM ?= icarus
 
-# RTL Configuration
-TOPLEVEL_LANG = verilog
+# Top-level module (should be sha256_core based on your interface)
 TOPLEVEL = sha256_core
 
-# Verilog source files - relative to uvm_testbench directory
-VERILOG_SOURCES += ../rtl/sha256_core.v
-VERILOG_SOURCES += ../rtl/sha256_w_mem.v  
-VERILOG_SOURCES += ../rtl/sha256_k_constants.v
-VERILOG_SOURCES += ../rtl/sha256.v
+# Verilog sources - adjust paths as needed
+VERILOG_SOURCES = ../rtl/sha256_core.v
+VERILOG_SOURCES += ../rtl/sha256_k_constants.v  
+VERILOG_SOURCES += ../rtl/sha256_w_mem.v
 
-# Python test module (without .py extension)
-MODULE = testbench
+# Python test modules
+MODULE = simple_testbench
 
-# Compilation arguments
+# Additional Icarus Verilog arguments
 COMPILE_ARGS += -I../rtl
 
-# Simulation arguments - VCD generation handled by cocotb
-# Remove custom VCD args as they conflict with iverilog
-
-# Python path - add current directory so imports work
+# Export PYTHONPATH to include current directory
 export PYTHONPATH := $(PWD):$(PYTHONPATH)
 
-# Cocotb logging
-export COCOTB_LOG_LEVEL = INFO
-
-# Include cocotb makefiles  
-include $(shell cocotb-config --makefiles)/Makefile.sim
-
-# Custom targets
-.PHONY: clean run waves help
-
 # Default target
-run: 
-	$(MAKE) sim
+all: sim
 
-# Open waveforms (will be generated as dump.vcd by cocotb)
-waves: 
-	@if [ -f dump.vcd ]; then \
-		gtkwave dump.vcd & \
-	elif [ -f sha256_test.vcd ]; then \
-		gtkwave sha256_test.vcd & \
-	else \
-		echo "No VCD file found. Run 'make WAVES=1' to generate waveforms."; \
-	fi
+# Run simple signal test first
+simple:
+	@echo "Running simple RTL test..."
+	$(MAKE) sim MODULE=simple_testbench
 
-# Enhanced clean
-clean::
+# Run the corrected simple test
+corrected:
+	@echo "Running corrected simple test..."
+	$(MAKE) sim MODULE=sha256_simple_test
+
+# Run UVM test
+uvm:
+	@echo "Running UVM test..."
+	$(MAKE) sim MODULE=testbench
+
+# Quick signal check
+quick:
+	@echo "Running quick signal test..."
+	$(MAKE) sim MODULE=sha256_simple_test TESTCASE=quick_signal_test
+
+# Clean generated files
+cleans:
 	rm -rf __pycache__/
-	rm -rf .pytest_cache/
 	rm -rf sim_build/
-	rm -f *.vcd
-	rm -f *.fst  
-	rm -f *.ghw
 	rm -f results.xml
-	rm -f *.log
+	rm -f *.vcd
+	rm -f *.fst
+
+# Include the common cocotb makefile
+include $(shell cocotb-config --makefiles)/Makefile.sim
 
 # Help target
 help:
-	@echo "SHA256 UVM Testbench Makefile"
-	@echo "=============================="
-	@echo "Targets:"
-	@echo "  make         - Run simulation with icarus (default)"
-	@echo "  make run     - Same as make"
-	@echo "  make waves   - Open waveform viewer (gtkwave)"
-	@echo "  make clean   - Clean build artifacts"
-	@echo "  make help    - Show this help"
+	@echo "Available targets:"
+	@echo "  simple    - Run basic RTL interface test"
+	@echo "  corrected - Run corrected signal test"  
+	@echo "  quick     - Run quick signal accessibility test"
+	@echo "  uvm       - Run full UVM testbench"
+	@echo "  cleans     - Clean generated files"
+	@echo "  help      - Show this help"
 	@echo ""
-	@echo "Simulator options:"
-	@echo "  make SIM=icarus    - Use Icarus Verilog (default)"
-	@echo "  make SIM=verilator - Use Verilator"
-	@echo "  make SIM=questa    - Use Questa/ModelSim"
-	@echo "  make SIM=vcs       - Use Synopsys VCS"
-	@echo ""
-	@echo "Debug options:"
-	@echo "  make WAVES=1       - Generate waveforms"
-	@echo "  make GUI=1         - Run with GUI (simulator dependent)"
+	@echo "Variables:"
+	@echo "  SIM       - Simulator (default: icarus)"
+	@echo "  TOPLEVEL  - Top module (default: sha256_core)"

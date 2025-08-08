@@ -1,4 +1,4 @@
-# sha256_monitor.py - Updated to use global DUT
+# sha256_monitor.py - Corrected with proper signal names
 from pyuvm import *
 import cocotb
 from cocotb.triggers import RisingEdge
@@ -19,6 +19,20 @@ class SHA256Monitor(uvm_component):
         if testbench.dut_handle is not None:
             self.dut = testbench.dut_handle
             self.logger.info("DUT retrieved from global handle")
+            
+            # Verify we have the expected signals
+            required_signals = ['clk', 'digest_valid', 'digest', 'ready']
+            missing_signals = []
+            
+            for sig in required_signals:
+                if not hasattr(self.dut, sig):
+                    missing_signals.append(sig)
+            
+            if missing_signals:
+                self.logger.error(f"Missing required signals: {missing_signals}")
+            else:
+                self.logger.info("All required signals found")
+                
         else:
             # Fallback: try ConfigDB
             try:
@@ -34,15 +48,36 @@ class SHA256Monitor(uvm_component):
     
     async def run_phase(self):
         self.raise_objection()
-        while True:
-            await RisingEdge(self.dut.clk)
-            
-            if self.dut.digest_valid.value:
-                txn = SHA256Transaction()
-                txn.digest = int(self.dut.digest.value)
-                txn.digest_valid = int(self.dut.digest_valid.value)
-                txn.ready = int(self.dut.ready.value)
+        
+        try:
+            while True:
+                await RisingEdge(self.dut.clk)
                 
-                self.logger.info(f"Observed digest: 0x{txn.digest:064x}")
-                self.analysis_port.write(txn)
-        self.drop_objection()
+                # Check for valid digest output
+                if int(self.dut.digest_valid.value) == 1:
+                    # Create transaction to capture the result
+                    txn = SHA256Transaction()
+                    txn.digest = int(self.dut.digest.value)
+                    txn.digest_valid = int(self.dut.digest_valid.value)
+                    txn.ready = int(self.dut.ready.value)
+                    
+                    self.logger.info(f"Observed digest_valid=1, digest=0x{txn.digest:064x}")
+                    self.analysis_port.write(txn)
+                
+                # Also monitor ready signal transitions for debugging
+                if hasattr(self, '_prev_ready'):
+                    current_ready = int(self.dut.ready.value)
+                    if current_ready != self._prev_ready:
+                        self.logger.info(f"Ready signal changed: {self._prev_ready} -> {current_ready}")
+                        self._prev_ready = current_ready
+                else:
+                    self._prev_ready = int(self.dut.ready.value)
+                    self.logger.info(f"Initial ready state: {self._prev_ready}")
+        
+        except Exception as e:
+            self.logger.error(f"Error in monitor run_phase: {e}")
+            import traceback
+            self.logger.error(f"Traceback: {traceback.format_exc()}")
+            
+        finally:
+            self.drop_objection()
