@@ -5,7 +5,13 @@ from cocotb.triggers import RisingEdge
 from sha256_transaction import SHA256Transaction
 
 # Import the global DUT handle
-import testbench
+try:
+    import fixed_testbench as testbench
+except ImportError:
+    try:
+        import testbench
+    except ImportError:
+        testbench = None
 
 class SHA256Monitor(uvm_component):
     def __init__(self, name, parent):

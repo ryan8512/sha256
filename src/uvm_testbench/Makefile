@@ -28,14 +28,29 @@ simple:
 	@echo "Running simple RTL test..."
 	$(MAKE) sim MODULE=simple_testbench
 
-# Run the corrected simple test
-corrected:
-	@echo "Running corrected simple test..."
-	$(MAKE) sim MODULE=sha256_simple_test
+# Run the fixed simple test
+fixed:
+	@echo "Running fixed simple test..."
+	$(MAKE) sim MODULE=sha256_fixed_test
 
-# Run UVM test
+# Run size test
+size_test:
+	@echo "Running block size test..."
+	$(MAKE) sim MODULE=sha256_fixed_test TESTCASE=simple_block_size_test
+
+# Run hex test
+hex_test:
+	@echo "Running hex string test..."
+	$(MAKE) sim MODULE=sha256_fixed_test TESTCASE=hex_string_test
+
+# Run UVM test with fixed testbench
 uvm:
 	@echo "Running UVM test..."
+	$(MAKE) sim MODULE=fixed_testbench
+
+# Run original UVM test  
+uvm_orig:
+	@echo "Running original UVM test..."
 	$(MAKE) sim MODULE=testbench
 
 # Quick signal check
@@ -58,10 +73,13 @@ include $(shell cocotb-config --makefiles)/Makefile.sim
 help:
 	@echo "Available targets:"
 	@echo "  simple    - Run basic RTL interface test"
-	@echo "  corrected - Run corrected signal test"  
+	@echo "  fixed     - Run fixed simple test (no overflow)"
+	@echo "  size_test - Run block size validation test"  
+	@echo "  hex_test  - Run hex string conversion test"  
 	@echo "  quick     - Run quick signal accessibility test"
-	@echo "  uvm       - Run full UVM testbench"
-	@echo "  cleans     - Clean generated files"
+	@echo "  uvm       - Run full UVM testbench (fixed version)"
+	@echo "  uvm_orig  - Run original UVM testbench"
+	@echo "  clean     - Clean generated files"
 	@echo "  help      - Show this help"
 	@echo ""
 	@echo "Variables:"

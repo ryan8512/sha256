@@ -4,7 +4,13 @@ import cocotb
 from cocotb.triggers import RisingEdge, FallingEdge, Timer
 
 # Import the global DUT handle
-import testbench
+try:
+    import fixed_testbench as testbench
+except ImportError:
+    try:
+        import testbench
+    except ImportError:
+        testbench = None
 
 class SHA256Driver(uvm_driver):
     def __init__(self, name, parent):
