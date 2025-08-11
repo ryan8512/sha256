@@ -1,4 +1,5 @@
 from pyuvm import *
+import hashlib
 
 class SHA256ScoreboardExport(uvm_analysis_export):
     """Custom analysis export that forwards to scoreboard"""
@@ -17,20 +18,55 @@ class SHA256Scoreboard(uvm_component):
         # Create custom analysis export
         self.analysis_export = SHA256ScoreboardExport("analysis_export", self)
         
-        # Dictionary to map block -> expected digest
-        self.expected_outputs = {}
+        # Counter for received transactions
+        self.transaction_count = 0
+        
+        # Dictionary to store expected results for known test patterns
+        self.setup_expected_results()
+    
+    def setup_expected_results(self):
+        """Setup expected results for known test patterns"""
+        self.expected_results = {}
+        
+        # For zero block (all zeros - 512 bits)
+        zero_block = b'\x00' * 64  # 64 bytes = 512 bits
+        zero_hash = hashlib.sha256(zero_block).hexdigest()
+        self.expected_results[0] = int(zero_hash, 16)
+        self.logger.info(f"Expected result for zero block: 0x{zero_hash}")
+        
+        # Note: For more complex patterns, you would need to implement
+        # the exact SHA256 padding and processing that your RTL uses
     
     def write_transaction(self, txn):
         """This method will be called by the analysis export"""
-        self.logger.info(f"Scoreboard received digest: 0x{txn.digest:064x}")
+        self.transaction_count += 1
         
-        # Find Expected digest based on something
-        expected_digest = self.expected_outputs.get(txn.block, None)
+        self.logger.info(f"=== Scoreboard Transaction #{self.transaction_count} ===")
+        self.logger.info(f"Received digest: 0x{txn.digest:064x}")
+        self.logger.info(f"Ready: {txn.ready}, Valid: {txn.digest_valid}")
         
-        if expected_digest is None:
-            self.logger.warning("No expected digest found for this block")
+        # Basic validation - digest should not be zero (unless it's the zero block result)
+        if txn.digest == 0:
+            self.logger.error("Received zero digest - this might indicate an error")
         else:
-            if txn.digest != expected_digest:
-                self.logger.error(f"Digest mismatch!\nExpected: 0x{expected_digest:064x}\nActual: 0x{txn.digest:064x}")
-            else:
-                self.logger.info("Digest matches expected")
+            self.logger.info("✓ Non-zero digest received")
+        
+        # Check digest_valid should be 1
+        if txn.digest_valid != 1:
+            self.logger.error(f"Expected digest_valid=1, got {txn.digest_valid}")
+        else:
+            self.logger.info("✓ digest_valid is correctly asserted")
+        
+        # For the zero block case, we can check against expected result
+        if hasattr(txn, 'block') and txn.block == 0:
+            expected = self.expected_results.get(0)
+            if expected and txn.digest == expected:
+                self.logger.info("✓ Zero block digest matches expected result")
+            elif expected:
+                self.logger.error(f"✗ Zero block digest mismatch!")
+                self.logger.error(f"  Expected: 0x{expected:064x}")
+                self.logger.error(f"  Actual:   0x{txn.digest:064x}")
+        
+        # Log statistics
+        self.logger.info(f"Total transactions processed: {self.transaction_count}")
+        self.logger.info("=" * 50)

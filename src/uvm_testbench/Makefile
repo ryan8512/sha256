@@ -48,11 +48,6 @@ uvm:
 	@echo "Running UVM test..."
 	$(MAKE) sim MODULE=uvmtest_fixed
 
-# Run original UVM test  
-uvm_orig:
-	@echo "Running original UVM test..."
-	$(MAKE) sim MODULE=uvmtest_orig
-
 # Quick signal check
 quick:
 	@echo "Running quick signal test..."

@@ -1,12 +1,12 @@
-# sha256_monitor.py - Corrected with proper signal names
+# sha256_monitor.py - Fixed version with edge detection
 from pyuvm import *
 import cocotb
-from cocotb.triggers import RisingEdge
+from cocotb.triggers import RisingEdge, FallingEdge
 from sha256_transaction import SHA256Transaction
 
 # Import the global DUT handle
 try:
-    import fixed_testbench as testbench
+    import uvmtest_fixed as testbench
 except ImportError:
     try:
         import testbench
@@ -18,6 +18,7 @@ class SHA256Monitor(uvm_component):
         super().__init__(name, parent)
         self.dut = None
         self.analysis_port = uvm_analysis_port("analysis_port", self)
+        self.prev_digest_valid = 0
 
     def build_phase(self):
         super().build_phase()
@@ -56,19 +57,29 @@ class SHA256Monitor(uvm_component):
         self.raise_objection()
         
         try:
+            # Initialize previous state to track edges
+            await RisingEdge(self.dut.clk)
+            prev_digest_valid = int(self.dut.digest_valid.value)
+            self.logger.info(f"Monitor started, initial digest_valid = {prev_digest_valid}")
+            
             while True:
                 await RisingEdge(self.dut.clk)
                 
-                # Check for valid digest output
-                if int(self.dut.digest_valid.value) == 1:
+                current_digest_valid = int(self.dut.digest_valid.value)
+                
+                # Only trigger on RISING EDGE of digest_valid (0 -> 1)
+                if current_digest_valid == 1 and prev_digest_valid == 0:
                     # Create transaction to capture the result
                     txn = SHA256Transaction()
                     txn.digest = int(self.dut.digest.value)
-                    txn.digest_valid = int(self.dut.digest_valid.value)
+                    txn.digest_valid = current_digest_valid
                     txn.ready = int(self.dut.ready.value)
                     
-                    self.logger.info(f"Observed digest_valid=1, digest=0x{txn.digest:064x}")
+                    self.logger.info(f"Detected digest_valid RISING EDGE, digest=0x{txn.digest:064x}")
                     self.analysis_port.write(txn)
+                
+                # Update previous state for next cycle
+                prev_digest_valid = current_digest_valid
                 
                 # Also monitor ready signal transitions for debugging
                 if hasattr(self, '_prev_ready'):
@@ -78,7 +89,6 @@ class SHA256Monitor(uvm_component):
                         self._prev_ready = current_ready
                 else:
                     self._prev_ready = int(self.dut.ready.value)
-                    self.logger.info(f"Initial ready state: {self._prev_ready}")
         
         except Exception as e:
             self.logger.error(f"Error in monitor run_phase: {e}")
