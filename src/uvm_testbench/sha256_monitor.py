@@ -8,9 +8,6 @@ from sha256_transaction import SHA256Transaction
 try:
     import uvmtest_fixed as testbench
 except ImportError:
-    try:
-        import testbench
-    except ImportError:
         testbench = None
 
 class SHA256Monitor(uvm_component):
@@ -96,4 +93,6 @@ class SHA256Monitor(uvm_component):
             self.logger.error(f"Traceback: {traceback.format_exc()}")
             
         finally:
-            self.drop_objection()
+            if hasattr(self, "_raised_objection") and self._raised_objection:
+                self.drop_objection()
+                self._raised_objection = False

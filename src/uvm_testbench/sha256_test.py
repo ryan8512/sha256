@@ -121,7 +121,4 @@ class SHA256Test(uvm_test):
         except:
             pass  # They might not have objections raised
         
-        # Set the global end flag
-        uvm_root().stop_request()
-        
         self.drop_objection()

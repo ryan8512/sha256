@@ -7,9 +7,6 @@ from cocotb.triggers import RisingEdge, FallingEdge, Timer
 try:
     import uvmtest_fixed as testbench
 except ImportError:
-    try:
-        import testbench
-    except ImportError:
         testbench = None
 
 class SHA256Driver(uvm_driver):
