@@ -13,6 +13,7 @@ class SHA256Driver(uvm_driver):
     def __init__(self, name, parent):
         super().__init__(name, parent)
         self.dut = None
+        self.input_ap = uvm_analysis_port("input_ap", self)  # analysis port for inputs
 
     def build_phase(self):
         super().build_phase()
@@ -55,6 +56,10 @@ class SHA256Driver(uvm_driver):
             txn = await self.seq_item_port.get_next_item()
             
             self.logger.info(f"Driving transaction: {txn}")
+
+            # Forward input transaction to scoreboard via analysis port
+            self.input_ap.write(txn)
+
             await self.drive_transaction(txn)
             
             self.seq_item_port.item_done()

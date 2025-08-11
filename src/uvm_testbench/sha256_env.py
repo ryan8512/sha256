@@ -13,3 +13,4 @@ class SHA256Env(uvm_component):
     def connect_phase(self):
         # Connect the analysis port to the scoreboard's analysis export
         self.agent.monitor.analysis_port.connect(self.scoreboard.analysis_export)
+        self.agent.driver.input_ap.connect(self.scoreboard.input_export)
