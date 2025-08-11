@@ -29,7 +29,7 @@ class SHA256Scoreboard(uvm_component):
         self.expected_results = {}
         
         # For zero block (all zeros - 512 bits)
-        zero_block = b'\x61\x62\x63\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x18'
+        zero_block = "61626380000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000018"
         zero_hash = self.sha256_naked(zero_block)
         self.expected_results[0] = int(zero_hash, 16)
         self.logger.info(f"Expected result for zero block: 0x{zero_hash}")
@@ -71,12 +71,12 @@ class SHA256Scoreboard(uvm_component):
         self.logger.info(f"Total transactions processed: {self.transaction_count}")
         self.logger.info("=" * 50)
     
-    def sha256_naked(self, block:bytes) -> str:
+    def sha256_naked(self, block:str) -> str:
         #Convert to list type (int)
         TC_block = [0] * 16
         for i in range(len(TC_block)):
-            chunk = block[4*i: 4*i+4]
-            TC_block[i] = int.from_bytes(chunk, byteorder='big')  # or 'little' depending on endianness
+            chunk = block[8*i: 8*i+8]
+            TC_block[i] = int(chunk,16)
             
         my_sha256 = SHA256(verbose=0)
         my_sha256.init()

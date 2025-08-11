@@ -42,8 +42,8 @@ async def simple_rtl_test(dut):
     try:
         dut.init.value = 1
         dut.next.value = 0
-        dut.mode.value = 0
-        dut.block.value = 0x123456789abcdef0fedcba9876543210abcdef0123456789fedcba9876543210123456789abcdef0fedcba9876543210abcdef0123456789fedcba9876543210  # 512-bit value
+        dut.mode.value = 1
+        dut.block.value = 0x61626380000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000018  # 512-bit value
         print("Successfully set input signals")
         
         await RisingEdge(dut.clk)

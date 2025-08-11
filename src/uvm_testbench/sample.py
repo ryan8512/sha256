@@ -1,11 +1,11 @@
 from sha256 import SHA256
 
-def sha256_naked(block:bytes) -> str:
+def sha256_naked(block) -> str:
     #Convert to list type (int)
     TC_block = [0] * 16
     for i in range(len(TC_block)):
-        chunk = block[4*i: 4*i+4]
-        TC_block[i] = int.from_bytes(chunk, byteorder='big')  # or 'little' depending on endianness
+        chunk = block[8*i: 8*i+8]
+        TC_block[i] = int(chunk,16)
         
     my_sha256 = SHA256(verbose=0)
     my_sha256.init()
@@ -17,4 +17,6 @@ def sha256_naked(block:bytes) -> str:
     reconstructed_bytes = b''.join(x.to_bytes(4, byteorder='big') for x in my_digest)
     return reconstructed_bytes.hex()
     
-print(sha256_naked(b'\x61\x62\x63\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x18'))
+print(sha256_naked("aaaaaaaaaaaaaaaa5555555555555555aaaaaaaaaaaaaaaa5555555555555555aaaaaaaaaaaaaaaa5555555555555555aaaaaaaaaaaaaaaa5555555555555555"))
+
+#0xaaaaaaaaaaaaaaaa5555555555555555aaaaaaaaaaaaaaaa5555555555555555aaaaaaaaaaaaaaaa5555555555555555aaaaaaaaaaaaaaaa5555555555555555

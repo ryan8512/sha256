@@ -23,8 +23,8 @@ class SHA256SimpleSequence(uvm_sequence):
         txn = SHA256Transaction()
         txn.init = 1  # First transaction uses init
         txn.next = 0
-        txn.mode = 0
-        txn.block = int.from_bytes(b'\x61\x62\x63\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x18', byteorder='big')
+        txn.mode = 1
+        txn.block = 0x61626380000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000018  # 512-bit value
         
         
         print("Sending zero block transaction")
@@ -37,19 +37,20 @@ class SHA256SimpleSequence(uvm_sequence):
         # Test 2: Simple pattern
         print("--- Test 2: Pattern Block ---")
         txn = SHA256Transaction()
-        txn.init = 0  # Subsequent transactions use next
-        txn.next = 1
-        txn.mode = 0
+        txn.init = 1  # Subsequent transactions use next
+        txn.next = 0
+        txn.mode = 1
+        txn.block = 0x61626380000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000018  # 512-bit value
         
         # Create a safe 512-bit pattern
-        pattern = 0x123456789abcdef0
-        txn.block = 0
-        for j in range(8):  # 8 * 64 bits = 512 bits
-            txn.block = (txn.block << 64) | pattern
+        # pattern = 0x123456789abcdef0
+        # txn.block = 0
+        # for j in range(8):  # 8 * 64 bits = 512 bits
+        #     txn.block = (txn.block << 64) | pattern
         
-        # Ensure it's not too large
-        if txn.block.bit_length() > 512:
-            txn.block = txn.block & ((1 << 512) - 1)
+        # # Ensure it's not too large
+        # if txn.block.bit_length() > 512:
+        #     txn.block = txn.block & ((1 << 512) - 1)
         
         print(f"Sending pattern block (bits: {txn.block.bit_length()})")
         await self.start_item(txn)
@@ -60,9 +61,9 @@ class SHA256SimpleSequence(uvm_sequence):
         # Test 3: Another pattern
         print("--- Test 3: Alternating Pattern ---")
         txn = SHA256Transaction()
-        txn.init = 0
-        txn.next = 1
-        txn.mode = 0
+        txn.init = 1
+        txn.next = 0
+        txn.mode = 1
         
         # Create alternating pattern
         pattern1 = 0xaaaaaaaaaaaaaaaa
