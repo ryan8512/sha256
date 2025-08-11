@@ -57,7 +57,7 @@ async def simple_rtl_test(dut):
         raise
     
     # Wait a few cycles and monitor outputs
-    for i in range(10):
+    for i in range(70):
         await RisingEdge(dut.clk)
         try:
             ready_val = dut.ready.value

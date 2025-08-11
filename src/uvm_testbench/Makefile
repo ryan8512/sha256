@@ -12,7 +12,7 @@ VERILOG_SOURCES += ../rtl/sha256_k_constants.v
 VERILOG_SOURCES += ../rtl/sha256_w_mem.v
 
 # Python test modules
-MODULE = simple_testbench
+MODULE = test_default
 
 # Additional Icarus Verilog arguments
 COMPILE_ARGS += -I../rtl
@@ -26,37 +26,37 @@ all: sim
 # Run simple signal test first
 simple:
 	@echo "Running simple RTL test..."
-	$(MAKE) sim MODULE=simple_testbench
+	$(MAKE) sim MODULE=test_default
 
 # Run the fixed simple test
 fixed:
 	@echo "Running fixed simple test..."
-	$(MAKE) sim MODULE=sha256_fixed_test
+	$(MAKE) sim MODULE=test_fixed
 
 # Run size test
 size_test:
 	@echo "Running block size test..."
-	$(MAKE) sim MODULE=sha256_fixed_test TESTCASE=simple_block_size_test
+	$(MAKE) sim MODULE=test_fixed TESTCASE=simple_block_size_test
 
 # Run hex test
 hex_test:
 	@echo "Running hex string test..."
-	$(MAKE) sim MODULE=sha256_fixed_test TESTCASE=hex_string_test
+	$(MAKE) sim MODULE=test_fixed TESTCASE=hex_string_test
 
 # Run UVM test with fixed testbench
 uvm:
 	@echo "Running UVM test..."
-	$(MAKE) sim MODULE=fixed_testbench
+	$(MAKE) sim MODULE=uvmtest_fixed
 
 # Run original UVM test  
 uvm_orig:
 	@echo "Running original UVM test..."
-	$(MAKE) sim MODULE=testbench
+	$(MAKE) sim MODULE=uvmtest_orig
 
 # Quick signal check
 quick:
 	@echo "Running quick signal test..."
-	$(MAKE) sim MODULE=sha256_simple_test TESTCASE=quick_signal_test
+	$(MAKE) sim MODULE=test_simple TESTCASE=quick_signal_test
 
 # Clean generated files
 cleans:
