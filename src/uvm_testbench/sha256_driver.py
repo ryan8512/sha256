@@ -95,6 +95,8 @@ class SHA256Driver(uvm_driver):
             self.dut.next.value = 0
             self.logger.info("Deasserted control signals")
             
+            await RisingEdge(self.dut.clk)
+            
             # Now wait for the operation to complete
             # The operation is complete when digest_valid goes high
             timeout_count = 0
@@ -121,14 +123,6 @@ class SHA256Driver(uvm_driver):
                 
                 # Wait one more cycle to let the monitor capture the result
                 await RisingEdge(self.dut.clk)
-                
-                # Wait for digest_valid to go low (end of operation)
-                timeout_count = 0
-                while int(self.dut.digest_valid.value) == 1 and timeout_count < 100:
-                    await RisingEdge(self.dut.clk)
-                    timeout_count += 1
-                
-                self.logger.info(f"digest_valid deasserted after {timeout_count} additional cycles")
                 
         except Exception as e:
             self.logger.error(f"Error in drive_transaction: {e}")
