@@ -1,16 +1,13 @@
 import cocotb
 from cocotb.triggers import Timer, RisingEdge
 from cocotb.clock import Clock
-from pyuvm import *
+from pyuvm import uvm_root
+from sha256_configdb import configdb
 from sha256_test import SHA256Test
 
 @cocotb.test()
 async def sha256_uvm_test(dut):
     """Main cocotb test function with proper clock and reset"""
-    
-    # Store DUT globally so components can access it
-    global dut_handle
-    dut_handle = dut
     
     print("=" * 60)
     print("Starting SHA256 UVM Test")
@@ -47,10 +44,10 @@ async def sha256_uvm_test(dut):
     
     # Set in ConfigDB as backup
     try:
-        ConfigDB().set(None, "*", "DUT", dut)
-        ConfigDB().set(None, "uvm_test_top.*", "DUT", dut)
+        configdb.set(None, "*", "DUT", dut)
+        print("DUT saved to ConfigDB")
     except:
-        pass
+        print("It didn't save correctly to ConfigDB")
     
     # Run the UVM test
     await uvm_root().run_test("SHA256Test")

@@ -4,9 +4,6 @@ from pyuvm import *
 from sha256_env import SHA256Env
 from sha256_transaction import SHA256Transaction
 
-# Global DUT reference - simple and reliable
-dut_handle = None
-
 class SHA256SimpleSequence(uvm_sequence):
     def __init__(self, name="SHA256SimpleSequence"):
         super().__init__(name)
@@ -98,14 +95,6 @@ class SHA256Test(uvm_test):
         await Timer(1000, "ns")  # 1us wait for reset
         
         self.logger.info("=== Starting SHA256 UVM Test ===")
-        
-        # Check if we can access the DUT
-        try:
-            ready_val = int(dut_handle.ready.value)
-            digest_valid_val = int(dut_handle.digest_valid.value)
-            self.logger.info(f"Initial DUT state: ready={ready_val}, digest_valid={digest_valid_val}")
-        except Exception as e:
-            self.logger.error(f"Could not read DUT state: {e}")
         
         seq = SHA256SimpleSequence("simple_seq")
         await seq.start(self.env.agent.sequencer)

@@ -1,7 +1,7 @@
 # sha256_monitor.py - Fixed version with edge detection
 from pyuvm import *
-import cocotb
-from cocotb.triggers import RisingEdge, FallingEdge
+from sha256_configdb import configdb
+from cocotb.triggers import RisingEdge
 from sha256_transaction import SHA256Transaction
 
 # Import the global DUT handle
@@ -19,10 +19,10 @@ class SHA256Monitor(uvm_component):
 
     def build_phase(self):
         super().build_phase()
+        self.dut = configdb.get(self, "", "DUT")
         # Get DUT from global variable (most reliable)
-        if testbench.dut_handle is not None:
-            self.dut = testbench.dut_handle
-            self.logger.info("DUT retrieved from global handle")
+        if self.dut is not None:
+            self.logger.info("DUT retrieved from ConfigDB")
             
             # Verify we have the expected signals
             required_signals = ['clk', 'digest_valid', 'digest', 'ready']
@@ -38,16 +38,6 @@ class SHA256Monitor(uvm_component):
                 self.logger.info("All required signals found")
                 
         else:
-            # Fallback: try ConfigDB
-            try:
-                self.dut = ConfigDB().get(None, "*", "DUT")
-                self.logger.info("DUT retrieved from config_db")
-            except:
-                # Last resort: direct cocotb access
-                self.dut = cocotb.top
-                self.logger.info("DUT set from cocotb.top directly")
-        
-        if self.dut is None:
             self.logger.fatal("Failed to get DUT - no DUT available")
     
     async def run_phase(self):

@@ -1,13 +1,6 @@
-# sha256_driver.py - Fixed version with proper sequencing
-from pyuvm import *
-import cocotb 
-from cocotb.triggers import RisingEdge, FallingEdge, Timer
-
-# Import the global DUT handle
-try:
-    import uvmtest_fixed as testbench
-except ImportError:
-        testbench = None
+from pyuvm import uvm_analysis_port, uvm_driver
+from sha256_configdb import configdb
+from cocotb.triggers import RisingEdge, Timer
 
 class SHA256Driver(uvm_driver):
     def __init__(self, name, parent):
@@ -17,23 +10,18 @@ class SHA256Driver(uvm_driver):
 
     def build_phase(self):
         super().build_phase()
+        self.dut = configdb.get(self, "", "DUT")
         # Get DUT from global variable (most reliable)
-        if testbench.dut_handle is not None:
-            self.dut = testbench.dut_handle
-            self.logger.info("DUT retrieved from global handle")
-            
-            # Debug: Print all available signals
-            self.logger.info(f"DUT type: {type(self.dut)}")
-            available_signals = [attr for attr in dir(self.dut) if not attr.startswith('_')]
-            self.logger.info(f"Available DUT signals: {available_signals}")
+        if self.dut is not None:
+            self.logger.info("DUT retrieved from ConfigDB")
             
             # Check for expected signals
             expected_signals = ['clk', 'reset_n', 'init', 'next', 'mode', 'block', 'ready', 'digest', 'digest_valid']
             for sig in expected_signals:
                 if hasattr(self.dut, sig):
-                    self.logger.info(f"✓ Signal '{sig}' found")
+                    self.logger.info(f"Signal '{sig}' found")
                 else:
-                    self.logger.warning(f"✗ Signal '{sig}' NOT found")
+                    self.logger.warning(f"Signal '{sig}' NOT found")
             
         else:
             self.logger.fatal("Failed to get DUT - no DUT available")

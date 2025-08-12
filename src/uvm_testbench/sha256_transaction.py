@@ -1,5 +1,4 @@
 from pyuvm import uvm_sequence_item
-import cocotb
 
 class SHA256Transaction(uvm_sequence_item):
     def __init__(self, name="SHA256Transaction"):
