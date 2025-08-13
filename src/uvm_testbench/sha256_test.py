@@ -11,8 +11,8 @@ class SHA256SimpleSequence(uvm_sequence):
         # Use print instead of logger for sequences to avoid initialization issues
         print("=== Starting SHA256 Sequence ===")
         
-        # Test 1: Zero block
-        print("--- Test 1: abc Block ---")
+        # Test 1: abc block
+        print("--- Test 1: abc Block (SHA256) ---")
         txn = SHA256Transaction()
         txn.init = 1  # First transaction uses init
         txn.next = 0
@@ -20,21 +20,23 @@ class SHA256SimpleSequence(uvm_sequence):
         txn.block = 0x61626380000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000018  # 512-bit value
         
         
-        print("Sending zero block transaction")
+        print("Sending abc block transaction")
         await self.start_item(txn)
         await self.finish_item(txn)
         
-        # Test 2: Simple pattern
-        print("--- Test 2: abc Block 2 ---")
+        # Test 1.5: Zero block
+        print("--- Test 2: abc Block (SHA224) ---")
         txn = SHA256Transaction()
-        txn.init = 1  # Subsequent transactions use next
+        txn.init = 1  # First transaction uses init
         txn.next = 0
-        txn.mode = 1
+        txn.mode = 0
         txn.block = 0x61626380000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000018  # 512-bit value
         
-        print(f"Sending pattern block (bits: {txn.block.bit_length()})")
+        
+        print("Sending abc block transaction")
         await self.start_item(txn)
         await self.finish_item(txn)
+        
         
         # Test 3: Another pattern
         print("--- Test 3: Alternating Pattern ---")
@@ -61,6 +63,25 @@ class SHA256SimpleSequence(uvm_sequence):
     
         print("=== Sequence Complete ===")
 
+class SHA256RandomSequence(uvm_sequence):
+    def __init__(self, name="SHA256RandomSequence"):
+        super().__init__(name)
+    
+    async def body(self):
+        print("=== Starting SHA256 Random Sequence ===")
+        
+        for i in range(10):
+            print(f"--- Test {i+1}: Random Block {i+1} ---")
+            txn = SHA256Transaction()
+            txn.init = 1  # Subsequent transactions use next
+            txn.next = 0
+            txn.randomize()
+            
+            print(f"Sending pattern block (bits: {txn.block.bit_length()})")
+            await self.start_item(txn)
+            await self.finish_item(txn)
+    
+
 class SHA256Test(uvm_test):
     def __init__(self, name, parent):
         super().__init__(name, parent)
@@ -73,8 +94,10 @@ class SHA256Test(uvm_test):
         
         self.logger.info("=== Starting SHA256 UVM Test ===")
         
-        seq = SHA256SimpleSequence("simple_seq")
-        await seq.start(self.env.agent.sequencer)
+        seq1 = SHA256SimpleSequence("simple_seq")
+        seq2 = SHA256RandomSequence("random_seq")
+        await seq1.start(self.env.agent.sequencer)
+        await seq2.start(self.env.agent.sequencer)
         
         self.logger.info("=== SHA256 UVM Test Complete ===")
         

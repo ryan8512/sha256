@@ -71,7 +71,7 @@ class SHA256Scoreboard(uvm_component):
             
             # For the zero block case, we can check against expected result
             if hasattr(output_txn, 'block') and output_txn.block == 0:
-                expected = self.sha256_naked(str(hex(input_txn.block)))
+                expected = self.sha256_naked(str(hex(input_txn.block)), input_txn.mode)
                 if expected and output_txn.digest == int(expected,16):
                     self.logger.info("Block Digest matched!")
                     self.logger.info(f"  Expected: 0x{expected}")
@@ -85,15 +85,18 @@ class SHA256Scoreboard(uvm_component):
             self.logger.info(f"Total transactions processed: {self.transaction_count}")
             self.logger.info("=" * 50)
     
-    def sha256_naked(self, block:str) -> str:
+    def sha256_naked(self, block:str, mode:int) -> str:
         #Convert to list type (int)
         block = block[2:]  #Delete the 0x
         TC_block = [0] * 16
         for i in range(len(TC_block)):
             chunk = block[8*i: 8*i+8]
             TC_block[i] = int(chunk,16)
-            
-        my_sha256 = SHA256(verbose=0)
+        
+        if(mode == 1):
+            my_sha256 = SHA256(verbose=0)
+        else:
+            my_sha256 = SHA256(mode="sha224")
         my_sha256.init()
         my_sha256.next(TC_block)
         my_digest = my_sha256.get_digest()

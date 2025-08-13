@@ -1,4 +1,5 @@
 from pyuvm import uvm_sequence_item
+import random
 
 class SHA256Transaction(uvm_sequence_item):
     def __init__(self, name="SHA256Transaction"):
@@ -18,3 +19,7 @@ class SHA256Transaction(uvm_sequence_item):
     def __str__(self):
         return (f"[SHA256Transaction init={self.init} next={self.next} "
                 f"mode={self.mode} block=0x{self.block:0128x}]")
+    
+    def randomize(self):
+        self.block = random.getrandbits(512)
+        self.mode = random.randint(0, 1)
